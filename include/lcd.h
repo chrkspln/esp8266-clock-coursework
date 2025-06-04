@@ -26,6 +26,24 @@ uint32_t lastPrintedWeatherTime = 0;
 uint32_t lastPrintedClockTime = 0;
 byte termometer_br[8];
 
+bool isBacklightOn = true;
+
+void updateBacklight() {
+  // Night mode from 2:00 to 5:00
+  if (timeinfo.tm_hour >= 2 && timeinfo.tm_hour < 5) {
+    if (isBacklightOn) {
+      LCD.noBacklight();
+      isBacklightOn = false;
+    }
+  } else {
+    if (!isBacklightOn) {
+      LCD.backlight();
+      isBacklightOn = true;
+    }
+  }
+}
+
+
 void printTimeLCD(tm newTime, bool forcePrint = false)
 {
   LCD.clear();
@@ -209,6 +227,8 @@ uint32_t displayStart = 0;
 
 void lcdLoop()
 {
+  // Always keep backlight updated
+  updateBacklight();
   uint32_t now = millis();
 
   if (now - displayStart >= 10000) {
