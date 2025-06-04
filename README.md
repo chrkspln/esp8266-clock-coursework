@@ -35,61 +35,51 @@
 
 ## Стек програмного забезпечення
 
-**PlatformIO** як середовище збірки
+* **PlatformIO** як середовище збірки
 * **Фреймворк:** Arduino для ESP8266
 * **Файлова система:** LittleFS для зберігання конфігурації
-* **Бібліотеки веб-серверів:** * `ESPAWebWizard
-
-  * `ESPAsyncWebServer` * `ESPAsyncWebServer
-  * `AsyncFsWebServer` * `AsyncFsWebServer
-* Розбір JSON:** `ArduinoJson` * `ArduinoJson`
-* **Комп'ютерні бібліотеки інтерфейсу користувача:** `BigNumbers_I2C`, `LiquidCrystal_I2C`.
+* **Бібліотеки веб-сервера:**
+ESPAsyncWebServer,
+AsyncFsWebServer
+* **JSON парс:** ArduinoJson
+* **Кастомні бібліотеки для інтерфейсу користувача:** BigNumbers_I2C, LiquidCrystal_I2C
 
 ## Структура папок
-
 ```
 project_root/
 ├── data/
 │ ├── setup/
-│ ├── index.html # Форма конфігурації Wi-Fi
-│ ├── wifi_conf.json # Збережені SSID/пароль
+│ ├── index.html        # Форма конфігурації Wi-Fi
+│ ├── wifi_conf.json    # Збережені SSID/пароль (не зберігаються в git)
 ├── include/
-│ ├── clock. h # Синхронізація NTP та обробка часу
-│ ├── lcd.h # Логіка роботи РК-дисплея
-│ ├── led_sts.h # Керування світлодіодним індикатором
-│ ├── special_chars. h # Спеціальні визначення символів LCD
-│ ├── weather.h # Запити API погоди
-│ └── wifiConf. h # Конфігурація Wi-Fi та логіка порталу
-├── lib/ # Додаткові бібліотеки користувача
+│ ├── clock. h          # Синхронізація NTP та обробка часу
+│ ├── lcd.h             # Логіка роботи РК-дисплея
+│ ├── led_sts.h         # Керування світлодіодним індикатором
+│ ├── special_chars. h  # Спеціальні визначення символів LCD
+│ ├── weather.h         # Запити API погоди
+│ └── wifiConf. h       # Конфігурація Wi-Fi та логіка порталу
 ├── src/
-│ └── main.cpp # Точка входу до проекту
-├── platformio.ini # Конфігурація збірки
+│ └── main.cpp          # Точка входу до проекту
+├── platformio.ini      # Конфігурація збірки
 └── README.md
 ```
 
 ## Інструкції з налаштування
 
-1. **Встановіть PlatformIO у код Visual Studio.
+1. **Встановіть PlatformIO** у код Visual Studio.
 2. **Підключіть ESP8266** через USB (переконайтеся, що це правильний COM-порт).
 3. **Завантажте прошивку:**.
-
-   ```sh
+ ```sh
  pio run -t upload
  ```
-4. **Завантажте файлову систему (форму та конфігурацію Wi-Fi):** *.
-
-   ```sh
+4. **Завантажте файлову систему (форму та конфігурацію Wi-Fi):**
+```sh
  pio run -t uploadfs
  ```
-5. **Послідовний вихід монітора (необов'язково):** ```sh pio monitor device run -t ``` 6.
-
-   ```sh
- pio device monitor --baud 115200
- ```
-
-## Ліцензія
-
-Цей проект створено для навчальних цілей як курсову роботу і не ліцензовано для комерційного використання.
+5. **Послідовний вихід монітора (необов'язково):**
+```sh
+pio device monitor --baud 115200
+```
 
 ----------------------------------------------------------
 
@@ -134,20 +124,18 @@ This project is a smart digital clock built using an ESP8266 microcontroller and
 * **Framework:** Arduino for ESP8266
 * **Filesystem:** LittleFS for configuration storage
 * **Web server libraries:**
-
-  * `ESPAsyncWebServer`
-  * `AsyncFsWebServer`
-* **JSON Parsing:** `ArduinoJson`
-* **Custom UI Libraries:** `BigNumbers_I2C`, `LiquidCrystal_I2C`
+ESPAsyncWebServer,
+AsyncFsWebServer
+* **JSON Parsing:** ArduinoJson
+* **Custom UI Libraries:** BigNumbers_I2C, LiquidCrystal_I2C
 
 ## Folder Structure
-
 ```
 project_root/
 ├── data/
 │   └── setup/
 │       ├── index.html       # Wi-Fi config form
-│       └── wifi_conf.json   # Stored SSID/password
+│       └── wifi_conf.json   # Stored SSID/password (don't get synced to git)
 ├── include/
 │   ├── clock.h              # NTP sync and time handling
 │   ├── lcd.h                # LCD display logic
@@ -155,7 +143,6 @@ project_root/
 │   ├── special_chars.h      # Custom LCD character definitions
 │   ├── weather.h            # Weather API requests
 │   └── wifiConf.h           # Wi-Fi config & captive portal logic
-├── lib/                     # Optional user libraries
 ├── src/
 │   └── main.cpp             # Project entry point
 ├── platformio.ini           # Build configuration
@@ -168,20 +155,15 @@ project_root/
 2. **Connect the ESP8266** via USB (ensure correct COM port).
 3. **Upload firmware:**
 
-   ```sh
-   pio run -t upload
-   ```
+```sh
+pio run -t upload
+```
 4. **Upload filesystem (Wi-Fi form & config):**
 
-   ```sh
-   pio run -t uploadfs
-   ```
+```sh
+pio run -t uploadfs
+```
 5. **Monitor serial output (optional):**
-
-   ```sh
-   pio device monitor --baud 115200
-   ```
-
-## License
-
-This project is built for educational purposes as coursework and is not licensed for commercial use.
+```sh
+pio device monitor --baud 115200
+```
