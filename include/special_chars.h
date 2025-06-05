@@ -2,11 +2,10 @@
 
 enum CUSTOM_CHARS
 {
-    LCD_PACMAN_CL = 1,
-    LCD_PACMAN,
-    LCD_DOT,
+    LCD_SMALL_DROPLET = 0,
     LCD_SMALL_THERMOMETER,
-    LCD_SMALL_DROPLET
+    LCD_PACMAN_CL,
+    LCD_PACMAN
 };
 
 enum ICONS
@@ -48,17 +47,6 @@ uint8_t pacmanOpen[] = {
     0b01110,
     0b00000,
     0b00000
-};
-
-byte dot[8] = {
-    B00000,
-    B00000,
-    B00000,
-    B00110,
-    B00110,
-    B00000,
-    B00000,
-    B00000
 };
 
 byte thermometer[8] = //icon for thermometer

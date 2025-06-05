@@ -100,7 +100,7 @@ void showWifiPacmanAnim(LiquidCrystal_I2C *lcd_p, unsigned long duration_ms = 10
     // Animate pacman chomping dots
     for (int i = 0; i < 16 && WiFi.status() != WL_CONNECTED; ++i) {
       lcd_p->setCursor(i, 1);
-      lcd_p->print((char)LCD_DOT);
+      lcd_p->print((char)'.');
       delay(50);
     }
 

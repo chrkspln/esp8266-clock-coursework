@@ -47,30 +47,39 @@ void updateBacklight() {
 
 void printTimeLCD(tm new_time, bool force_print = false)
 {
-    LCD.clear();
-  
-    if (((new_time.tm_sec != last_printed_time.tm_sec) && (millis() - last_printed_clock_time > 1000)) || force_print == true) {
-        if ((new_time.tm_min != last_printed_time.tm_min) || (new_time.tm_hour != last_printed_time.tm_hour)) {
-            LCD.clear();
+    // Only update every second or when explicitly forced
+    if (((new_time.tm_sec != last_printed_time.tm_sec) && (millis() - last_printed_clock_time > 1000)) || force_print) {
+
+        // Update date only if day has changed
+        if (force_print || new_time.tm_mday != last_printed_time.tm_mday || new_time.tm_mon != last_printed_time.tm_mon || new_time.tm_year != last_printed_time.tm_year) {
+            LCD.setCursor(0, 0);
+            if (new_time.tm_mday < 10) LCD.print('0');
+            LCD.print(new_time.tm_mday);
+            LCD.print('/');
+            if ((new_time.tm_mon + 1) < 10) LCD.print('0');
+            LCD.print(new_time.tm_mon + 1);
+            LCD.print('/');
+            LCD.print(new_time.tm_year - 100);
+            LCD.print("     "); // clear remainder if year shrinks
         }
 
-        LCD.setCursor(0, 0);
-        LCD.print(new_time.tm_mday);
-        LCD.print('/');
-        if ((new_time.tm_mon + 1) < 10) LCD.print('0');
-        LCD.print((new_time.tm_mon + 1));
-        LCD.print('/');
-        LCD.print(new_time.tm_year - 100);
-
+        // Print hours
         LCD.setCursor(0, 1);
         if (new_time.tm_hour < 10) LCD.print('0');
         LCD.print(new_time.tm_hour);
+
         LCD.print(':');
+
+        // Print minutes
         if (new_time.tm_min < 10) LCD.print('0');
         LCD.print(new_time.tm_min);
+
         LCD.print(':');
+
+        // Print seconds
         if (new_time.tm_sec < 10) LCD.print('0');
         LCD.print(new_time.tm_sec);
+        LCD.print("   "); // pad out old leftovers if time string gets shorter
 
         last_printed_time = new_time;
         last_printed_clock_time = millis();
@@ -80,10 +89,10 @@ void printTimeLCD(tm new_time, bool force_print = false)
 
 void setupChars()
 {
+    LCD.createChar(LCD_SMALL_DROPLET, droplet_mid1);
+    LCD.createChar(LCD_SMALL_THERMOMETER, thermometer);
     LCD.createChar(LCD_PACMAN_CL, pacmanClosed);
     LCD.createChar(LCD_PACMAN, pacmanOpen);
-    LCD.createChar(LCD_DOT, dot);
-    LCD.createChar(LCD_SMALL_THERMOMETER, thermometer);
     big_num.begin();
 }
 
@@ -163,8 +172,9 @@ void printTemperatureLCD(bool force_print = false, bool set_chars = false)
         LCD.setCursor(10, 1);
         LCD.print((char)'.');
 
-        LCD.setCursor(1, 1);
-        LCD.write((char)LCD_SMALL_THERMOMETER);
+        LCD.setCursor(0, 1);
+        //LCD.write((char)LCD_SMALL_THERMOMETER);
+        LCD.print("temp");
         LCD.setCursor(14, 1);
         LCD.print((char)223); // degree symbol
         LCD.print("C");
@@ -178,7 +188,9 @@ void printHumidityLCD(bool force_print = false, bool set_chars = false)
 {
     if ((millis() - last_printed_weather_time > timerSyncDelay_w) || force_print == true)
     {
-        if (set_chars) { setupChars(); }
+        if (set_chars) {
+          setupChars();
+        }
     // ----------------------------
     // DISPLAY HUMIDITY
     // ----------------------------
@@ -194,13 +206,14 @@ void printHumidityLCD(bool force_print = false, bool set_chars = false)
     // LCD.write((char)LCD_DROPLET_BL);
     // LCD.write((char)LCD_DROPLET_BR);
 
-    loadDropletIconSmall(Weather.humidity, LCD_SMALL_DROPLET);
+    // loadDropletIconSmall(Weather.humidity, LCD_SMALL_DROPLET);
 
     int hum = (int)Weather.humidity;
     big_num.displayLargeInt(hum, 4, 0, 2, false);
 
-    LCD.setCursor(1, 1);
-    LCD.write((char)LCD_SMALL_DROPLET);
+    LCD.setCursor(0, 1);
+    LCD.print("hum");
+    //LCD.write((char)LCD_SMALL_DROPLET);
     LCD.setCursor(11, 1);
     LCD.print('%');
 
@@ -218,10 +231,10 @@ void printWeatherLCD(bool forcePrint = false, bool setChars = false)
             setupChars();
         }
 
-        loadDropletIconSmall(Weather.humidity, LCD_SMALL_DROPLET);
+        //loadDropletIconSmall(Weather.humidity, LCD_SMALL_DROPLET);
 
         LCD.setCursor(9, 0);
-        LCD.write((char)LCD_THERMOMETER);
+        LCD.write((char)LCD_SMALL_THERMOMETER);
         LCD.print((float)Weather.temp, 1);
         LCD.print((char)223);
         LCD.print('C');
@@ -280,13 +293,18 @@ void lcdLoop()
     time(&rawtime);
     localtime_r(&rawtime, &time_info);
     updateBacklight();
-    uint32_t now_millis = millis();
-    if (now_millis - display_start >= 10000) {
-        display_start = now_millis;
 
+    if (current_display == SHOW_TIME) {
+        printTimeLCD(time_info);
+    }
+
+    uint32_t now_millis = millis();
+    if (now_millis - display_start >= 5000) {
+        display_start = now_millis;
+        localtime_r(&rawtime, &time_info);
         switch (current_display) {
             case SHOW_TIME:
-                printTimeLCD(time_info, true);
+                LCD.clear();
                 current_display = SHOW_TEMP;
                 break;
             case SHOW_TEMP:
@@ -299,13 +317,14 @@ void lcdLoop()
                 break;
             case SHOW_ALL:
                 printTimeLCD(time_info);
+                delay(1);
                 printWeatherLCD();
                 current_display = SHOW_TIME;
                 break;
         }
     }
 
-    delay(1000); // avoid flicker
+    delay(500); // avoid flicker
 }
 
 
