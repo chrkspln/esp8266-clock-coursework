@@ -3,14 +3,14 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include "wifiConf.h"
+#include "wifi_conf.h"
 
 // set location and API key
-String Location = "Lviv,UA";
-String API_Key = "8cd7834a6b2b8a74a77b47b7feb76237";
+String location = "Lviv,UA";
+String api_key = "8cd7834a6b2b8a74a77b47b7feb76237";
 
-uint32_t lastSyncTime_w = 0;
-const uint32_t timerSyncDelay_w = 60000;
+uint32_t last_sync_time_w = 0;
+const uint32_t timer_sync_delay_w = 60000;
 
 struct Weather
 {
@@ -40,16 +40,16 @@ void setWeatherData(const JsonDocument& doc)
     Weather.wind_degree = doc["wind"]["deg"];                   // get wind degree in °
 }
 
-void httpGETRequest(const char *serverName)
+void httpGETRequest(const char *server_name)
 {
     WiFiClient client;
     HTTPClient http;
 
     http.useHTTP10(true);
-    http.begin(client, serverName);
+    http.begin(client, server_name);
 
-    int httpResponseCode = http.GET();
-    if (httpResponseCode > 0)
+    int http_response_code = http.GET();
+    if (http_response_code > 0)
     {
         DynamicJsonDocument doc(1024);
         DeserializationError error = deserializeJson(doc, http.getStream());
@@ -65,34 +65,31 @@ void httpGETRequest(const char *serverName)
     else
     {
         Serial.print("Error code: ");
-        Serial.println(httpResponseCode);
+        Serial.println(http_response_code);
     }
-    // Free resources
     http.end();
-
-    // return payload;
 }
 
 void weatherSetup()
 {
-    lastSyncTime_w = millis();
-    String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + Location + "&APPID=" + API_Key;
-    httpGETRequest(serverPath.c_str());
+    last_sync_time_w = millis();
+    String server_path = "http://api.openweathermap.org/data/2.5/weather?q=" + location + "&APPID=" + api_key;
+    httpGETRequest(server_path.c_str());
 }
 
-void getWeatherLoop(uint32_t timeDelay)
+void getWeatherLoop(uint32_t time_delay)
 {
     
-    if (millis() - lastSyncTime_w > timeDelay)
+    if (millis() - last_sync_time_w > time_delay)
     {
         if (WiFi.status() == WL_CONNECTED) // Check WiFi connection status
         {
-            String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + Location + "&APPID=" + API_Key;
+            String server_path = "http://api.openweathermap.org/data/2.5/weather?q=" + location + "&APPID=" + api_key;
             // http://api.openweathermap.org/data/2.5/weather?q=Lviv,UA&APPID=8cd7834a6b2b8a74a77b47b7feb76237"
-            Serial.println(serverPath.c_str());
-            httpGETRequest(serverPath.c_str());
+            Serial.println(server_path.c_str());
+            httpGETRequest(server_path.c_str());
         }
-        lastSyncTime_w = millis();
+        last_sync_time_w = millis();
     }
 }
 

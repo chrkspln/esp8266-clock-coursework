@@ -1,17 +1,10 @@
 #include <Arduino.h>
-
-#ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#else
-#include <WiFi.h>
-#include <HTTPClient.h>
-#endif
-
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
-#include "wifiConf.h"
+#include "wifi_conf.h"
 #include "led_sts.h"
 #include "lcd.h"
 #include "clock.h"
@@ -24,14 +17,14 @@ void setup(void) {
   Serial.print("Starting; Compiled on ");
   Serial.println(__DATE__);
   Serial.println(__TIME__);
-  Serial.println(__FILE__);  //__BASE_FILE__
+  Serial.println(__FILE__);
 
   ledStsSetup();
   lcdSetupOne();
   LittleFS.begin();
   listFiles("/");
   setupWifi(&LCD);
-  if (isWiFiConnected) {
+  if (is_wifi_connected) {
     lcdSetupTwo();
     weatherSetup();
     Serial.println("Weater setup done");
@@ -45,7 +38,7 @@ void setup(void) {
 void loop() {
   delay(1);
   handleDnsLoop();
-  getWeatherLoop(timerSyncDelay_w);
-  getNTPtime(timerClockDelay);
+  getWeatherLoop(timer_sync_delay_w);
+  getNTPtime(timer_clock_delay);
   lcdLoop();
 }

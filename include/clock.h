@@ -11,45 +11,45 @@ const char *NTP_SERVER3 = "europe.pool.ntp.org";
 
 const char *TZ_INFO = "EET-2EEST,M3.5.0/3,M10.5.0/4"; // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
 
-tm timeinfo;
+tm time_info;
 time_t now;
-uint32_t lastNTPtime = 0;
-uint32_t lastEntryTime = 0;
+uint32_t last_ntp_time = 0;
+uint32_t last_entry_time = 0;
 
-const uint32_t timerClockDelay = 120; //2mins
+const uint32_t timer_clock_delay = 120; //2mins
 
-void showTime(tm localTime)
+void showTime(tm local_time)
 {
-    Serial.print(localTime.tm_mday);
+    Serial.print(local_time.tm_mday);
     Serial.print('/');
-    Serial.print(localTime.tm_mon + 1);
+    Serial.print(local_time.tm_mon + 1);
     Serial.print('/');
-    Serial.print(localTime.tm_year - 100);
+    Serial.print(local_time.tm_year - 100);
     Serial.print('-');
-    Serial.print(localTime.tm_hour);
+    Serial.print(local_time.tm_hour);
     Serial.print(':');
-    Serial.print(localTime.tm_min);
+    Serial.print(local_time.tm_min);
     Serial.print(':');
-    Serial.print(localTime.tm_sec);
+    Serial.print(local_time.tm_sec);
     Serial.print(" Day of Week ");
-    if (localTime.tm_wday == 0)
+    if (local_time.tm_wday == 0)
         Serial.println(7);
     else
-        Serial.println(localTime.tm_wday);
+        Serial.println(local_time.tm_wday);
 }
 
-void showTimeShort(tm localTime)
+void showTimeShort(tm local_time)
 {
     Serial.printf(
         "%04d-%02d-%02d %02d:%02d:%02d, day %d, %s time\n",
-        localTime.tm_year + 1900,
-        localTime.tm_mon + 1,
-        localTime.tm_mday,
-        localTime.tm_hour,
-        localTime.tm_min,
-        localTime.tm_sec,
-        (localTime.tm_wday > 0 ? localTime.tm_wday : 7),
-        (localTime.tm_isdst == 1 ? "summer" : "standard"));
+        local_time.tm_year + 1900,
+        local_time.tm_mon + 1,
+        local_time.tm_mday,
+        local_time.tm_hour,
+        local_time.tm_min,
+        local_time.tm_sec,
+        (local_time.tm_wday > 0 ? local_time.tm_wday : 7),
+        (local_time.tm_isdst == 1 ? "summer" : "standard"));
 }
 
 
@@ -59,12 +59,12 @@ bool getNTPtime(uint32_t sec)
     do
     {
         time(&now);
-        localtime_r(&now, &timeinfo);
+        localtime_r(&now, &time_info);
         Serial.print(".");
         delay(10);
-    } while (((millis() - start) <= (1000 * sec)) && (timeinfo.tm_year < (2016 - 1900)));
+    } while (((millis() - start) <= (1000 * sec)) && (time_info.tm_year < (2016 - 1900)));
     Serial.println();
-    if (timeinfo.tm_year <= (2016 - 1900))
+    if (time_info.tm_year <= (2016 - 1900))
     {
         Serial.println("ERR: NTP time not set");
         return false; // the NTP call was not successful
@@ -93,9 +93,9 @@ void setupNTPClock()
         ESP.restart();
     }
     
-    lastNTPtime = time(&now);
-    lastEntryTime = millis();
-    showTime(timeinfo);
+    last_ntp_time = time(&now);
+    last_entry_time = millis();
+    showTime(time_info);
   }
 }
 
