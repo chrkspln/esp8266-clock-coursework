@@ -1,47 +1,64 @@
-#ifndef WEATHER_H
-#define WEATHER_H
-
+#pragma once
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "wifi_conf.h"
 
-// set location and API key
-String location = "Lviv,UA";
-String api_key = "8cd7834a6b2b8a74a77b47b7feb76237";
-
-uint32_t last_sync_time_w = 0;
-const uint32_t timer_sync_delay_w = 60000;
-
-struct Weather
-{
-    float temp = 0.0;
-    int16_t humidity = 0;
-    float pressure = 0.0;
-    float wind_speed = 0.0;
+class Weather {
+private:
+    static constexpr float K_TO_C = 273.15f; // Kelvin to Celsius conversion factor
+    
+    // configuration
+    String location;
+    String api_key;
+    
+    // timing
+    uint32_t last_sync_time         = 0;
+    const int16_t timer_sync_delay = 60000;
+    
+    // weather data
+    float temp          = 0.0;
+    int8 humidity       = 0;
+    float pressure      = 0.0;
+    float wind_speed    = 0.0;
     int16_t wind_degree = 0;
-} Weather;
+    
+    void setWeatherData(const JsonDocument& doc);
+    void httpGETRequest(const char *server_name);
 
-void printWeatherCurrent()
-{
-    // print data
-    Serial.printf("Temperature = %.2f°C\r\n", Weather.temp);
-    Serial.printf("Humidity = %d %%\r\n", Weather.humidity);
-    Serial.printf("Pressure = %.3f bar\r\n", Weather.pressure);
-    Serial.printf("Wind speed = %.1f m/s\r\n", Weather.wind_speed);
-    Serial.printf("Wind degree = %d°\r\n\r\n", Weather.wind_degree);
+public:
+    Weather(const String& loc = "Lviv,UA", 
+            const String& key = "8cd7834a6b2b8a74a77b47b7feb76237");
+    
+    void setup();
+    void loop();
+    void printCurrent() const;
+
+    inline float get_temp() const { return temp; }
+    inline int8 get_humidity() const { return humidity; }
+
+};
+
+Weather::Weather(const String& loc, const String& key) 
+    : location(loc), api_key(key) {
 }
 
-void setWeatherData(const JsonDocument& doc)
-{
-    Weather.temp = (float)(doc["main"]["temp"]) - 273.15;       // get temperature in °C
-    Weather.humidity = (int16_t)doc["main"]["humidity"];        // get humidity in %
-    Weather.pressure = (float)(doc["main"]["pressure"]) / 1000; // get pressure in bar
-    Weather.wind_speed = doc["wind"]["speed"];                  // get wind speed in m/s
-    Weather.wind_degree = doc["wind"]["deg"];                   // get wind degree in °
+void Weather::setWeatherData(const JsonDocument& doc) {
+    temp        = static_cast<float>(doc["main"]["temp"]) - K_TO_C;
+    humidity    = static_cast<int8>(doc["main"]["humidity"]);
+    pressure    = static_cast<float>(doc["main"]["pressure"]) / 1000;
+    wind_speed  = doc["wind"]["speed"];
+    wind_degree = doc["wind"]["deg"];
 }
 
-void httpGETRequest(const char *server_name)
-{
+void Weather::printCurrent() const {
+    Serial.printf("Temperature = %.2f°C\r\n", temp);
+    Serial.printf("Humidity = %d %%\r\n", humidity);
+    Serial.printf("Pressure = %.3f bar\r\n", pressure);
+    Serial.printf("Wind speed = %.1f m/s\r\n", wind_speed);
+    Serial.printf("Wind degree = %d°\r\n\r\n", wind_degree);
+}
+
+void Weather::httpGETRequest(const char *server_name) {
     WiFiClient client;
     HTTPClient http;
 
@@ -49,8 +66,7 @@ void httpGETRequest(const char *server_name)
     http.begin(client, server_name);
 
     int http_response_code = http.GET();
-    if (http_response_code > 0)
-    {
+    if (http_response_code > 0) {
         DynamicJsonDocument doc(1024);
         DeserializationError error = deserializeJson(doc, http.getStream());
         if (error) {
@@ -60,37 +76,27 @@ void httpGETRequest(const char *server_name)
         }
 
         setWeatherData(doc);
-        printWeatherCurrent();
-    }
-    else
-    {
+        printCurrent();
+    } else {
         Serial.print("Error code: ");
         Serial.println(http_response_code);
     }
     http.end();
 }
 
-void weatherSetup()
-{
-    last_sync_time_w = millis();
+void Weather::setup() {
+    last_sync_time = millis();
     String server_path = "http://api.openweathermap.org/data/2.5/weather?q=" + location + "&APPID=" + api_key;
     httpGETRequest(server_path.c_str());
 }
 
-void getWeatherLoop(uint32_t time_delay)
-{
-    
-    if (millis() - last_sync_time_w > time_delay)
-    {
-        if (WiFi.status() == WL_CONNECTED) // Check WiFi connection status
-        {
+void Weather::loop() {
+    if (millis() - last_sync_time > timer_sync_delay) {
+        if (WiFi.status() == WL_CONNECTED) {
             String server_path = "http://api.openweathermap.org/data/2.5/weather?q=" + location + "&APPID=" + api_key;
-            // http://api.openweathermap.org/data/2.5/weather?q=Lviv,UA&APPID=8cd7834a6b2b8a74a77b47b7feb76237"
             Serial.println(server_path.c_str());
             httpGETRequest(server_path.c_str());
         }
-        last_sync_time_w = millis();
+        last_sync_time = millis();
     }
 }
-
-#endif

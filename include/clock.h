@@ -1,22 +1,20 @@
-#ifndef CLOCK_NTP_H
-#define CLOCK_NTP_H
+#pragma once
+
 #include <Arduino.h>
 #include <time.h>
 
-// #define UTC_OFFSET     0
-// #define UTC_OFFSET_DST 0
 const char *NTP_SERVER = "ch.pool.ntp.org";
 const char *NTP_SERVER2 = "pool.ntp.org";
 const char *NTP_SERVER3 = "europe.pool.ntp.org";
-
-const char *TZ_INFO = "EET-2EEST,M3.5.0/3,M10.5.0/4"; // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
+// timezone (Kyiv, Ukraine)
+const char *TZ_INFO = "EET-2EEST,M3.5.0/3,M10.5.0/4";
 
 tm time_info;
 time_t now;
-uint32_t last_ntp_time = 0;
+uint32_t last_ntp_time   = 0;
 uint32_t last_entry_time = 0;
 
-const uint32_t timer_clock_delay = 120; //2mins
+const uint32_t timer_clock_delay = 120; //2 mins
 
 void showTime(tm local_time)
 {
@@ -32,10 +30,9 @@ void showTime(tm local_time)
     Serial.print(':');
     Serial.print(local_time.tm_sec);
     Serial.print(" Day of Week ");
-    if (local_time.tm_wday == 0)
-        Serial.println(7);
-    else
-        Serial.println(local_time.tm_wday);
+
+    local_time.tm_wday == 0 ? Serial.print(7) 
+                            : Serial.print(local_time.tm_wday);
 }
 
 void showTimeShort(tm local_time)
@@ -49,7 +46,8 @@ void showTimeShort(tm local_time)
         local_time.tm_min,
         local_time.tm_sec,
         (local_time.tm_wday > 0 ? local_time.tm_wday : 7),
-        (local_time.tm_isdst == 1 ? "summer" : "standard"));
+        (local_time.tm_isdst == 1 ? "summer" : "standard")
+    );
 }
 
 
@@ -63,11 +61,13 @@ bool getNTPtime(uint32_t sec)
         Serial.print(".");
         delay(10);
     } while (((millis() - start) <= (1000 * sec)) && (time_info.tm_year < (2016 - 1900)));
+
     Serial.println();
+
     if (time_info.tm_year <= (2016 - 1900))
     {
         Serial.println("ERR: NTP time not set");
-        return false; // the NTP call was not successful
+        return false; // the NTP call failed
     }
 
     char time_output[30];
@@ -79,26 +79,23 @@ bool getNTPtime(uint32_t sec)
 
 void setupNTPClock()
 {
-  if(WiFi.status() == WL_CONNECTED){
-    configTime(0, 0, NTP_SERVER);
-    setenv("TZ", TZ_INFO, 1);
-    Serial.println("Getting NTP time");
-    if (getNTPtime(10))
+    if (WiFi.status() == WL_CONNECTED)
     {
-        Serial.print('*');
+        configTime(0, 0, NTP_SERVER);
+        setenv("TZ", TZ_INFO, 1);
+        Serial.println("Getting NTP time");
+        if (getNTPtime(10))
+        {
+            Serial.print('*');
+        }
+        else
+        {
+            Serial.println("ERR: Time not set");
+            ESP.restart();
+        }
+        
+        last_ntp_time = time(&now);
+        last_entry_time = millis();
+        showTime(time_info);
     }
-    else
-    {
-        Serial.println("ERR: Time not set");
-        ESP.restart();
-    }
-    
-    last_ntp_time = time(&now);
-    last_entry_time = millis();
-    showTime(time_info);
-  }
 }
-
-
-
-#endif
