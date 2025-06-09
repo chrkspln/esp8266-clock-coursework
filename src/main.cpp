@@ -25,7 +25,8 @@ void setup(void) {
     LittleFS.begin();
     listFiles("/");
     setupWifi(&LCD);
-    if (is_wifi_connected) {
+    if (is_wifi_connected)
+    {
         lcdSetupTwo();
         weather.setup();
         Serial.println("Weater setup done");

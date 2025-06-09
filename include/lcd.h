@@ -97,20 +97,11 @@ void printTimeLCD(tm new_time, bool force_print = false)
     }
 }
 
-void setupChars()
-{
-    LCD.createChar(LCD_SMALL_DROPLET, droplet_mid1);
-    LCD.createChar(LCD_SMALL_THERMOMETER, thermometer);
-    LCD.createChar(LCD_PACMAN_CL, pacmanClosed);
-    LCD.createChar(LCD_PACMAN, pacmanOpen);
-    big_num.begin();
-}
-
-void loadDropletIconSmall(float humidity, uint8_t slot = LCD_SMALL_DROPLET)
+void loadDropletIconSmall(const float humidity, uint8_t slot = LCD_SMALL_DROPLET)
 {
     byte* icon;
 
-    uint8_t sw = (int)humidity / 16;
+    uint8_t sw = static_cast<int>(humidity) / 16;
     switch (sw) 
     {
         case 0: icon = droplet_empty; break;
@@ -123,6 +114,19 @@ void loadDropletIconSmall(float humidity, uint8_t slot = LCD_SMALL_DROPLET)
         default: icon = droplet_full; break;
     }
     LCD.createChar(slot, icon);
+}
+
+void setupChars()
+{
+    LCD.createChar(LCD_PACMAN_CL, pacmanClosed);
+    LCD.createChar(LCD_PACMAN, pacmanOpen);
+    big_num.begin();
+}
+
+void setupWeatherChars(const float humidity)
+{
+    loadDropletIconSmall(humidity, LCD_SMALL_DROPLET);
+    LCD.createChar(LCD_SMALL_THERMOMETER, thermometer);
 }
 
 void printTemperatureLCD(bool force_print = false, bool set_chars = false)
@@ -170,10 +174,9 @@ void printHumidityLCD(bool force_print = false, bool set_chars = false)
           
         int hum = static_cast<int>(weather.get_humidity());
         big_num.displayLargeInt(hum, 4, 0, 2, false);
-          
+    
         LCD.setCursor(0, 1);
         LCD.print("hum");
-        //LCD.write((char)LCD_SMALL_DROPLET);
         LCD.setCursor(11, 1);
         LCD.print('%');
           
@@ -182,22 +185,17 @@ void printHumidityLCD(bool force_print = false, bool set_chars = false)
     }
 }
 
-void printWeatherLCD(bool forcePrint = false, bool setChars = false)
+void printWeatherLCD(bool forcePrint = false)
 {
     if ((millis() - last_printed_weather_time > weather.get_timer_sync_delay()) 
-        || forcePrint == true)
+        || forcePrint)
     {
-        if (setChars)
-        {
-            setupChars();
-        }
-
         LCD.setCursor(9, 0);
         LCD.write(static_cast<char>(LCD_SMALL_THERMOMETER));
         LCD.print(static_cast<float>(weather.get_temp()), 1);
-        LCD.print(static_cast<char>(223)); // degree symbol
+        LCD.print(static_cast<char>(223)); // °
         LCD.print('C');
-    
+
         LCD.setCursor(12, 1);
         LCD.write(static_cast<char>(LCD_SMALL_DROPLET));
         LCD.print(weather.get_humidity());
@@ -213,7 +211,6 @@ void lcdSetupOne()
     LCD.backlight();
     big_num.begin();
     setupChars();
-
     LCD.setCursor(0, 0);
     LCD.print("WIFI Connecting");
 }
@@ -245,12 +242,14 @@ void lcdLoop()
 
     displaySwitch.update();
 
-    if (displaySwitch.hasChanged()) 
-    {
+    SwitchInput::DisplayState state = displaySwitch.get_state();
+
+    if (displaySwitch.hasChanged()) {
         LCD.clear();
-        Serial.printf("[SWITCH] Raw: %d → Display Mode: %d\n", displaySwitch.get_raw_value(),
-                                                                   displaySwitch.get_state());
-        switch (displaySwitch.get_state()) 
+        Serial.printf("[SWITCH] Raw: %d → Display Mode: %d\n",
+                     displaySwitch.get_raw_value(), state);
+
+        switch (state)
         {
             case SwitchInput::SHOW_TEMP:
                 printTemperatureLCD(true, true);
@@ -258,17 +257,23 @@ void lcdLoop()
             case SwitchInput::SHOW_HUM:
                 printHumidityLCD(true, true);
                 break;
-            case SwitchInput::SHOW_ALL:
-                printWeatherLCD(true, true);
+            default:
                 break;
-            default: break;
         }
     }
 
-    if (displaySwitch.get_state() == SwitchInput::SHOW_TIME
-        || displaySwitch.get_state() == SwitchInput::SHOW_ALL)
+    if (state == SwitchInput::SHOW_TIME 
+        || state == SwitchInput::SHOW_ALL)
     {
         printTimeLCD(time_info, true);
     }
-    delay(250); // avoid flicker
+
+    if (state == SwitchInput::SHOW_ALL)
+    {
+        printWeatherLCD(true);
+        delay(2);      // wait for LCD to catch up
+        setupWeatherChars(weather.get_humidity());  // re-upload custom chars for temperature/humidity
+    }
+    
+    delay(250);
 }

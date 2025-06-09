@@ -1,6 +1,8 @@
 #pragma once
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
+
 #include "wifi_conf.h"
 
 class Weather {

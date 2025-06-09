@@ -2,10 +2,10 @@
 
 enum CUSTOM_CHARS
 {
-    LCD_SMALL_DROPLET,
-    LCD_SMALL_THERMOMETER,
     LCD_PACMAN_CL,
-    LCD_PACMAN
+    LCD_PACMAN,
+    LCD_SMALL_DROPLET = 6,
+    LCD_SMALL_THERMOMETER
 };
 
 uint8_t pacmanClosed[8] = {
