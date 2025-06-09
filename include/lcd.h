@@ -15,6 +15,7 @@
 LiquidCrystal_I2C LCD = LiquidCrystal_I2C(0x26, 16, 2);
 BigNumbers_I2C big_num(&LCD);
 SwitchInput displaySwitch(D5, D6, D7, D0);
+Weather weather;
 
 tm last_printed_time{};
 uint32_t last_printed_weather_time{};
@@ -63,7 +64,6 @@ void printTimeLCD(tm new_time, bool force_print = false)
                 LCD.print(new_time.tm_mon + 1);
                 LCD.print('/');
                 LCD.print(new_time.tm_year - 100);
-                LCD.print("     "); // clear remain if year shrinks
             }
 
         // print hours
@@ -91,7 +91,6 @@ void printTimeLCD(tm new_time, bool force_print = false)
             LCD.print('0');
         }
         LCD.print(new_time.tm_sec);
-        LCD.print("   "); // pad out old leftovers if time string gets shorter
 
         last_printed_time = new_time;
         last_printed_clock_time = millis();
@@ -248,26 +247,28 @@ void lcdLoop()
 
     if (displaySwitch.hasChanged()) 
     {
-            LCD.clear();
-            Serial.printf("[SWITCH] Raw: %d → Display Mode: %d\n", displaySwitch.get_raw_value(),
+        LCD.clear();
+        Serial.printf("[SWITCH] Raw: %d → Display Mode: %d\n", displaySwitch.get_raw_value(),
                                                                    displaySwitch.get_state());
+        switch (displaySwitch.get_state()) 
+        {
+            case SwitchInput::SHOW_TEMP:
+                printTemperatureLCD(true, true);
+                break;
+            case SwitchInput::SHOW_HUM:
+                printHumidityLCD(true, true);
+                break;
+            case SwitchInput::SHOW_ALL:
+                printWeatherLCD(true, true);
+                break;
+            default: break;
+        }
     }
-    switch (displaySwitch.get_state()) 
+
+    if (displaySwitch.get_state() == SwitchInput::SHOW_TIME
+        || displaySwitch.get_state() == SwitchInput::SHOW_ALL)
     {
-        case SwitchInput::SHOW_TIME:
-            printTimeLCD(time_info);
-            break;
-        case SwitchInput::SHOW_TEMP:
-            printTemperatureLCD(true, true);
-            break;
-        case SwitchInput::SHOW_HUM:
-            printHumidityLCD(true, true);
-            break;
-        case SwitchInput::SHOW_ALL:
-            printTimeLCD(time_info, true);
-            delay(1);
-            printWeatherLCD(true, true);
-            break;
+        printTimeLCD(time_info, true);
     }
-    delay(500); // avoid flicker
+    delay(250); // avoid flicker
 }

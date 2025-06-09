@@ -13,7 +13,7 @@ private:
     
     // timing
     uint32_t last_sync_time         = 0;
-    const int16_t timer_sync_delay = 60000;
+    const uint32_t timer_sync_delay = 60000;
     
     // weather data
     float temp          = 0.0;
@@ -35,14 +35,14 @@ public:
 
     inline float get_temp() const { return temp; }
     inline int8 get_humidity() const { return humidity; }
-
+    inline const float get_timer_sync_delay() const { return timer_sync_delay; }
 };
 
 Weather::Weather(const String& loc, const String& key) 
-    : location(loc), api_key(key) {
-}
+    : location(loc), api_key(key) {}
 
-void Weather::setWeatherData(const JsonDocument& doc) {
+void Weather::setWeatherData(const JsonDocument& doc)
+{
     temp        = static_cast<float>(doc["main"]["temp"]) - K_TO_C;
     humidity    = static_cast<int8>(doc["main"]["humidity"]);
     pressure    = static_cast<float>(doc["main"]["pressure"]) / 1000;
@@ -50,7 +50,8 @@ void Weather::setWeatherData(const JsonDocument& doc) {
     wind_degree = doc["wind"]["deg"];
 }
 
-void Weather::printCurrent() const {
+void Weather::printCurrent() const
+{
     Serial.printf("Temperature = %.2f°C\r\n", temp);
     Serial.printf("Humidity = %d %%\r\n", humidity);
     Serial.printf("Pressure = %.3f bar\r\n", pressure);
@@ -58,7 +59,8 @@ void Weather::printCurrent() const {
     Serial.printf("Wind degree = %d°\r\n\r\n", wind_degree);
 }
 
-void Weather::httpGETRequest(const char *server_name) {
+void Weather::httpGETRequest(const char *server_name)
+{
     WiFiClient client;
     HTTPClient http;
 
@@ -84,13 +86,15 @@ void Weather::httpGETRequest(const char *server_name) {
     http.end();
 }
 
-void Weather::setup() {
+void Weather::setup()
+{
     last_sync_time = millis();
     String server_path = "http://api.openweathermap.org/data/2.5/weather?q=" + location + "&APPID=" + api_key;
     httpGETRequest(server_path.c_str());
 }
 
-void Weather::loop() {
+void Weather::loop()
+{
     if (millis() - last_sync_time > timer_sync_delay) {
         if (WiFi.status() == WL_CONNECTED) {
             String server_path = "http://api.openweathermap.org/data/2.5/weather?q=" + location + "&APPID=" + api_key;

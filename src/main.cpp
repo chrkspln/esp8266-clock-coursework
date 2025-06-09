@@ -11,8 +11,6 @@
 #include "clock.h"
 #include "weather.h"
 
-Weather weather;
-
 void setup(void) {
     Serial.begin(115200);
     delay(1000);
